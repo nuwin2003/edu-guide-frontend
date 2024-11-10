@@ -13,41 +13,22 @@ import {
     Stack,
     Box
 } from '@mui/material';
+import {ToastContainer, toast} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import SuggestionService from "../services/SuggestionService.js";
 import StreamResultDialog from "./StreamResultDialog.jsx";
 
 const questions = [
-    {
-        id: 1,
-        text: "Are you fascinated by scientific theories and experiments?"
-    },
-    {
-        id: 2,
-        text: "Do you enjoy subjects like biology, chemistry, or physics?"
-    },
-    {
-        id: 3,
-        text: "Do you find economics and understanding how businesses operate interesting?"
-    },
-    {
-        id: 4,
-        text: "Are you curious about finance, accounting, or stock markets?"
-    },
-    {
-        id: 5,
-        text: "Are you inclined toward subjects like history, literature, or sociology?"
-    },
-    {
-        id: 6,
-        text: "Do you enjoy creative writing, poetry, or analyzing literature?"
-    },
-    {
-        id: 7,
-        text: "Are you interested in electronics, electrical circuits, and how machines work?",
-    },
+    {id: 1, text: "Are you fascinated by scientific theories and experiments?"},
+    {id: 2, text: "Do you enjoy subjects like biology, chemistry, or physics?"},
+    {id: 3, text: "Do you find economics and understanding how businesses operate interesting?"},
+    {id: 4, text: "Are you curious about finance, accounting, or stock markets?"},
+    {id: 5, text: "Are you inclined toward subjects like history, literature, or sociology?"},
+    {id: 6, text: "Do you enjoy creative writing, poetry, or analyzing literature?"},
+    {id: 7, text: "Are you interested in electronics, electrical circuits, and how machines work?"},
     {
         id: 8,
-        text: "Do you enjoy practical laboratory work and applying scientific concepts to real-world engineering problems?",
+        text: "Do you enjoy practical laboratory work and applying scientific concepts to real-world engineering problems?"
     }
 ];
 
@@ -63,14 +44,18 @@ const StudyPathForm = () => {
     });
 
     const onSubmit = async (data) => {
+        const unanswered = questions.some((q) => data[`question${q.id}`] === '');
+        if (unanswered) {
+            toast.error('Please answer all questions before submitting.');
+            return;
+        }
+
         const userResponseStreams = Object.entries(data).map(([key, value]) => ({
             questionId: parseInt(key.replace('question', '')),
             answer: value === 'yes' ? 'Y' : 'N'
         }));
 
-        const requestBody = {
-            userResponseStreams
-        };
+        const requestBody = {userResponseStreams};
         console.log('Sending request:', requestBody);
 
         try {
@@ -81,11 +66,11 @@ const StudyPathForm = () => {
         } catch (e) {
             console.error('Error:', e);
         }
-
     };
 
     return (
         <Card sx={{backgroundColor: '#F3F3F3', p: 2, overflow: 'auto', maxHeight: 600, scrollbarWidth: 'none'}}>
+            <ToastContainer/>
             <CardContent sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                 <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2}}>
                     <Typography sx={{fontSize: 22, fontWeight: 600, textAlign: 'center', maxWidth: 500}}>
@@ -102,7 +87,7 @@ const StudyPathForm = () => {
                 <Box m={2}>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <Stack spacing={3}>
-                            {questions?.map((question) => (
+                            {questions.map((question) => (
                                 <FormControl key={question.id} sx={{
                                     display: 'flex',
                                     flexDirection: 'row',
@@ -123,22 +108,10 @@ const StudyPathForm = () => {
                                         <Controller
                                             name={`question${question.id}`}
                                             control={control}
-                                            rules={{required: true}}
                                             render={({field}) => (
-                                                <RadioGroup
-                                                    {...field}
-                                                    row
-                                                >
-                                                    <FormControlLabel
-                                                        value="yes"
-                                                        control={<Radio/>}
-                                                        label="Yes"
-                                                    />
-                                                    <FormControlLabel
-                                                        value="no"
-                                                        control={<Radio/>}
-                                                        label="No"
-                                                    />
+                                                <RadioGroup {...field} row>
+                                                    <FormControlLabel value="yes" control={<Radio/>} label="Yes"/>
+                                                    <FormControlLabel value="no" control={<Radio/>} label="No"/>
                                                 </RadioGroup>
                                             )}
                                         />
@@ -159,13 +132,12 @@ const StudyPathForm = () => {
                         </Stack>
                     </form>
                 </Box>
-
             </CardContent>
             <StreamResultDialog
                 open={open}
                 onClose={() => {
                     setOpen(false);
-                    reset()
+                    reset();
                 }}
                 response={response}
             />
